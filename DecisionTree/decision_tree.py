@@ -2,10 +2,11 @@
 # decision tree implementation
 
 from math import log
+import numpy as np
 
 
 def create_dataset():
-    # create some data for test
+    """create some data for test"""
     dataSet = [[1, 1, 'yes'],
                [1, 1, 'yes'],
                [1, 0, 'no'],
@@ -16,7 +17,7 @@ def create_dataset():
     return dataSet, labels
 
 def calc_shanon_ent(dataSet):
-    # formula for entrophy: Info(D) = -\sum_{i=1}^{m} p_i*log(p_i)
+    """formula for entrophy: Info(D) = -\\sum_{i=1}^{m} p_i*log(p_i)"""
     numOfSample = len(dataSet)
     # cal how many feature the sample have
     labelCount = {}
@@ -34,8 +35,8 @@ def calc_shanon_ent(dataSet):
     return shanon_ent
 
 def split_dataset(dataset, axis, value):
-    # this will split dataset from axis, subset one whose feature
-    # `axis` equals `value`, another not equal
+    """this will split dataset from axis, subset one whose feature
+    `axis` equals `value`, another not equal, this function return subset one """
     ret_dataset = []
     for feat_vec in dataset:
         # extract feature `axis` from `dataset` and form `ret_dataset`
@@ -46,6 +47,7 @@ def split_dataset(dataset, axis, value):
     return ret_dataset
 
 def find_best_splition(dataset):
+    """ return int index of the best splition"""
     base_entrophy = calc_shanon_ent(dataset)
     num_feats = len(dataset[0]) - 1
 
@@ -67,4 +69,61 @@ def find_best_splition(dataset):
             best_choice['entro'] = base_entrophy - new_entro
     return best_choice['index'] # return a integer represent split axis
 
+# def get_data(txt):
+#     """ get data from txt, return dataste and label"""
+#     dataset = np.genfromtxt('D:\study files\辅修计算机\机器学习\machine-learning\DecisionTree\\'+txt, delimiter='\t', dtype=np.str)
+#     label = [last[-1] for last in data]
+#     return dataset, label
+
+def max_ent(class_label):
+    return 0
+
+def create_tree(dataset, labels):
+    """ create a decision tree based on training set
+    this tree is stored as dict structure in python"""
+    # decide which class it is
+    classLabel = [example[-1] for example in dataset]
+
+    if classLabel.count(classLabel[0]) == 1:
+        # all class in the dataset is the same, you can make a decision now
+        return classLabel[0]
+    if len(dataset[0]) == 1:
+        # you don't have any other feature to tell the diffrence, you have to
+        # make a better decision
+        return max_ent(classLabel)
+    # find a best split decision
+    best_feat = find_best_splition(dataset)
+    best_feat_label = labels[best_feat]
+    my_tree = {best_feat_label:{}}
+    # how many feature value this `best_feat` has, you got how many branches
+    feat_value = [example[best_feat] for example in dataset]
+    unique_value = set(feat_value)
+    del(labels[best_feat])
+    # for a specific branch, do the recursive `create_tree`
+    for value in unique_value:
+        sub_labels = labels[:]
+        subdata = split_dataset(dataset, best_feat, value)
+        my_tree[best_feat_label][value] = create_tree(subdata, sub_labels)
+    return my_tree
+
+def get_right_lenses(trainedTree, testVec, labels):
+    """ predict right lenses for patient"""
+    first = trainedTree.keys()[0]
+    secondDict = trainedTree[first]
+    featIndex = labels.index(first)
+    key = testVec[featIndex]
+    value = secondDict[key]
+    if isinstance(value, dict):
+        class_label = get_right_lenses(value, testVec, labels)
+    else:
+        class_label = value
+    return class_label
+
 print(find_best_splition(create_dataset()[0]))
+# data, label = get_data('lenses.txt')
+dataset = np.genfromtxt('lenses.txt', delimiter='\t', dtype=np.str)
+labels = ['age', 'eyesight', 'comfirm', 'condition', 'lenses']
+ds_tree = create_tree(dataset.tolist(), labels)
+test = ['young', 'hyper', 'no', 'reduced']
+print(get_right_lenses(ds_tree, test, labels))
+print(ds_tree)
