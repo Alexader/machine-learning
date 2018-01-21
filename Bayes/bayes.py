@@ -67,8 +67,8 @@ def classifyNB(vec2tclassify, p0vec, p1vec, p_class1):
     abusive email showing up in database'''
     p0 = sum(vec2tclassify * p0vec) + np.log(1.0 - p_class1)
     p1 = sum(vec2tclassify * p1vec) + np.log(p_class1)
-    # print("p0: ", np.exp(p0))
-    # print("p1: ", np.exp(p1))
+    print("p0: ", np.exp(p0))
+    print("p1: ", np.exp(p1))
     if p0 > p1:
         return 0
     else:
@@ -80,9 +80,10 @@ def test():
     trainMatrix = []
     for doc in posts:
         trainMatrix.append(vocab2Vec(vocab, doc))
-    p0, p1, p_abusive = trainNB0(trainMatrix, classlist)
+    p0, p1, p_abusive = trainNB0(np.array(trainMatrix), np.array(classlist))
     test0 = ['love', 'my', 'cute']
     print(test0, " classfy as: ", classifyNB(vocab2Vec(vocab, test0), p0, p1, p_abusive))
     test1 = ['fuck', 'hell']
     print(test1, " classfy as: ", classifyNB(vocab2Vec(vocab, test1), p0, p1, p_abusive))
-test()
+if __name__ == '__main__':
+    test()
